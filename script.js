@@ -54,11 +54,13 @@ class GameScene extends Phaser.Scene {
       if (type === 'CARDIOVASCULAR') config = { color: 0xff0000, label: 'CV RISK', hp: 3 };
       if (type === 'HYPOGLYCEMIA') config = { color: 0xffa500, label: 'HYPO', hp: 1 };
 
-      const enemy = this.add.circle(0, 300, 20, config.color);
+      const enemy = this.add.rectangle(0, 300, 30, 30, config.color);
       this.physics.add.existing(enemy);
       enemy.body.setVelocityX(150);
       enemy.type = type;
       enemy.hp = config.hp;
+
+      console.log('enemy velocity:', enemy.body.velocity.x);
 
       const label = this.add.text(0, 270, config.label, { fontSize: '12px', color: '#ffffff' }).setOrigin(0.5);
       enemy.labelText = label;
@@ -136,7 +138,10 @@ const config = {
   width: 800,
   height: 600,
   backgroundColor: "#1e1e1e",
-  physics: { default: 'arcade' },
+  physics: { 
+      default: 'arcade',
+      arcade: { gravity: { y: 0 }, debug: false }
+  },
   scene: [GameScene]
 };
 
