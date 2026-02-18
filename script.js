@@ -5,7 +5,6 @@ class GameScene extends Phaser.Scene {
   }
 
   create() {
-
       this.patient = {
           HbA1c: 9.2,
           eGFR: 80,
@@ -18,26 +17,96 @@ class GameScene extends Phaser.Scene {
       this.egfrText = this.add.text(20, 45, "", { fontSize: "20px", color: "#ffff00" });
       this.weightText = this.add.text(20, 70, "", { fontSize: "20px", color: "#ffffff" });
 
-      // New Vitals Panel (Right side x=620)
       this.cvRiskText = this.add.text(620, 20, "", { fontSize: "20px", color: "#ff0000" });
       this.hypoRiskText = this.add.text(620, 45, "", { fontSize: "20px", color: "#ffa500" });
 
       this.updateVitalsUI();
 
       this.enemies = this.physics.add.group();
-      this.spawnEnemy();
-
-      this.input.on("pointerdown", () => {
-          this.activateMetformin();
-      });
+      this.gameOver = false;
+      this.startTime = this.time.now;
 
       this.time.addEvent({
-          delay: 3000,
+          delay: 2000,
           callback: this.spawnEnemy,
           callbackScope: this,
           loop: true
       });
 
+      this.input.on("pointerdown", () => {
+          this.activateMetformin();
+      });
+  }
+
+  spawnEnemy() {
+      if (this.gameOver) return;
+
+      const elapsed = (this.time.now - this.startTime) / 1000;
+      let pool = ['METABOLIC'];
+      if (elapsed > 10) {
+          pool.push('RENAL', 'CARDIOVASCULAR', 'HYPOGLYCEMIA');
+      }
+
+      const type = Phaser.Utils.Array.GetRandom(pool);
+      let config = { color: 0xffff00, label: 'GLUCOSE', hp: 1 };
+
+      if (type === 'RENAL') config = { color: 0x800080, label: 'CKD', hp: 2 };
+      if (type === 'CARDIOVASCULAR') config = { color: 0xff0000, label: 'CV RISK', hp: 3 };
+      if (type === 'HYPOGLYCEMIA') config = { color: 0xffa500, label: 'HYPO', hp: 1 };
+
+      const enemy = this.add.circle(0, 300, 20, config.color);
+      this.physics.add.existing(enemy);
+      enemy.body.setVelocityX(150);
+      enemy.type = type;
+      enemy.hp = config.hp;
+
+      const label = this.add.text(0, 270, config.label, { fontSize: '12px', color: '#ffffff' }).setOrigin(0.5);
+      enemy.labelText = label;
+
+      this.enemies.add(enemy);
+  }
+
+  update(time, delta) {
+      if (this.gameOver) return;
+
+      this.updateVitalsUI();
+
+      if (this.patient.CV_risk >= 100) this.triggerGameOver("CV Risk too high!");
+      else if (this.patient.hypoglycemia_risk >= 100) this.triggerGameOver("Hypoglycemia Risk too high!");
+      else if (this.patient.eGFR <= 10) this.triggerGameOver("eGFR too low!");
+
+      this.enemies.getChildren().forEach(enemy => {
+          if (enemy.labelText) {
+              enemy.labelText.x = enemy.x;
+          }
+
+          if (enemy.x >= 750) {
+              this.applyDamage(enemy.type);
+              if (enemy.labelText) enemy.labelText.destroy();
+              enemy.destroy();
+          }
+      });
+  }
+
+  applyDamage(type) {
+      if (type === 'METABOLIC') {
+          this.patient.HbA1c += 0.2;
+          this.patient.CV_risk += 2;
+      } else if (type === 'RENAL') {
+          this.patient.eGFR -= 3;
+      } else if (type === 'CARDIOVASCULAR') {
+          this.patient.CV_risk += 10;
+      } else if (type === 'HYPOGLYCEMIA') {
+          this.patient.hypoglycemia_risk += 20;
+      }
+      this.updateVitalsUI();
+  }
+
+  activateMetformin() {
+      if (this.patient.HbA1c > 6) {
+          this.patient.HbA1c -= 0.5;
+          this.updateVitalsUI();
+      }
   }
 
   updateVitalsUI() {
@@ -58,44 +127,6 @@ class GameScene extends Phaser.Scene {
           color: "#ff0000",
           align: "center"
       }).setOrigin(0.5);
-  }
-
-  spawnEnemy() {
-      const enemy = this.add.circle(0, 300, 15, 0xff0000);
-      this.physics.add.existing(enemy);
-      enemy.body.setVelocityX(500);
-      this.enemies.add(enemy);
-  }
-
-  activateMetformin() {
-      if (this.patient.HbA1c > 6) {
-          this.patient.HbA1c -= 0.5;
-          this.updateVitalsUI();
-      }
-  }
-
-  update(time, delta) {
-      if (this.gameOver) return;
-
-      this.updateVitalsUI();
-
-      if (this.patient.CV_risk >= 100) {
-          this.triggerGameOver("CV Risk too high!");
-      } else if (this.patient.hypoglycemia_risk >= 100) {
-          this.triggerGameOver("Hypoglycemia Risk too high!");
-      } else if (this.patient.eGFR <= 10) {
-          this.triggerGameOver("eGFR too low!");
-      }
-
-      this.enemies.getChildren().forEach(enemy => {
-
-          if (enemy.x > 800) {
-              enemy.destroy();
-              this.patient.HbA1c += 0.2;
-              this.updateVitalsUI();
-          }
-
-      });
   }
 
 }
