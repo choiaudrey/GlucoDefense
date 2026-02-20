@@ -1,3 +1,7 @@
+## Links
+Game: [https://gluco-defense--choiaudreyy.replit.app/](URL)
+Devpost: [https://devpost.com/software/glucodefense#updates](URL)
+
 ## Inspiration
 Question banks teach you *what* to prescribe. They don't teach you *when*, or what happens when you're wrong. In real clinical practice, a prescribing decision unfolds over time: you start a drug, watch the patient's labs shift, and adjust. You manage trade-offs between efficacy and safety simultaneously. No existing tool (UWorld, AMBOSS, Anki, or ChatGPT wrappers) replicates this temporal, consequential decision-making.
 
