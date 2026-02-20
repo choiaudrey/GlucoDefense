@@ -1,5 +1,6 @@
 ## Links
 Game: [https://gluco-defense--choiaudreyy.replit.app/](URL)
+
 Devpost: [https://devpost.com/software/glucodefense#updates](URL)
 
 ## Inspiration
